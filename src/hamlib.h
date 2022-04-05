@@ -17,9 +17,9 @@ class NodeHamLib : public Napi::ObjectWrap<NodeHamLib> {
   Napi::Value GetMode(const Napi::CallbackInfo&);
   Napi::Value GetStrength(const Napi::CallbackInfo&);
 
+  Napi::Value Close(const Napi::CallbackInfo&);
   static Napi::Function GetClass(Napi::Env);
 
  private:
-  std::string _greeterName;
   RIG *my_rig;
 };

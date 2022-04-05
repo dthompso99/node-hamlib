@@ -241,6 +241,19 @@ if (retcode == RIG_OK) {
   }
 }
 
+Napi::Value NodeHamLib::Close(const Napi::CallbackInfo & info) {
+  Napi::Env env = info.Env();
+
+  int retcode = rig_close(my_rig);
+  if (retcode != RIG_OK) {
+    printf("rig_open: error = %s\n", rigerror(retcode));
+    // Napi::TypeError::New(env, "Unable to open rig")
+    // .ThrowAsJavaScriptException();
+  }
+
+  return Napi::Number::New(env, retcode);
+}
+
 Napi::Function NodeHamLib::GetClass(Napi::Env env) {
   return DefineClass(
     env,
@@ -254,6 +267,7 @@ Napi::Function NodeHamLib::GetClass(Napi::Env env) {
       NodeHamLib::InstanceMethod("getFrequency", & NodeHamLib::GetFrequency),
       NodeHamLib::InstanceMethod("getMode", & NodeHamLib::GetMode),
       NodeHamLib::InstanceMethod("getStrength", & NodeHamLib::GetStrength),
+      NodeHamLib::InstanceMethod("close", & NodeHamLib::Close),
     });
 }
 
@@ -262,5 +276,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set(name, NodeHamLib::GetClass(env));
   return exports;
 }
+
 
 NODE_API_MODULE(addon, Init)

@@ -1,9 +1,9 @@
 {
   "name": "node-libham",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "gypfile": true,
   "main": "./build/Release/hamlib",
-  "license": "MIT",
+  "license": "LGPL",
   "repository": "https://github.com/dthompso99/node-hamlib",
   "scripts":{
     "install": "node-gyp configure && node-gyp build",
