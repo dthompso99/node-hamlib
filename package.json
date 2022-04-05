@@ -4,6 +4,11 @@
   "gypfile": true,
   "main": "./build/Release/hamlib",
   "license": "MIT",
+  "repository": "https://github.com/dthompso99/node-hamlib",
+  "scripts":{
+    "install": "node-gyp configure && node-gyp build",
+    "prepare": "npm run install"
+  },
   "dependencies": {
     "node-addon-api": "^4.3.0"
   }
