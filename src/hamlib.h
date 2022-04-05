@@ -18,6 +18,7 @@ class NodeHamLib : public Napi::ObjectWrap<NodeHamLib> {
   Napi::Value GetStrength(const Napi::CallbackInfo&);
 
   Napi::Value Close(const Napi::CallbackInfo&);
+  Napi::Value Destroy(const Napi::CallbackInfo&);
   static Napi::Function GetClass(Napi::Env);
 
  private:

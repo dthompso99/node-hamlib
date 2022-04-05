@@ -130,11 +130,9 @@ Napi::Value NodeHamLib::SetMode(const Napi::CallbackInfo & info) {
     }
     auto bandstr = info[1].As < Napi::String > ().Utf8Value().c_str();
     if (strcmp(bandstr, "narrow") == 0) {
-      printf("**rig set bandwidth to %s \n", bandstr);
       bandwidth = rig_passband_narrow(my_rig, mode);
     } else if (strcmp(bandstr, "wide") == 0) {
       bandwidth = rig_passband_wide(my_rig, mode);
-      printf("**rig set bandwidth to %s \n", bandstr);
     } else {
       bandwidth = RIG_PASSBAND_NORMAL;
     }
@@ -246,9 +244,21 @@ Napi::Value NodeHamLib::Close(const Napi::CallbackInfo & info) {
 
   int retcode = rig_close(my_rig);
   if (retcode != RIG_OK) {
-    printf("rig_open: error = %s\n", rigerror(retcode));
-    // Napi::TypeError::New(env, "Unable to open rig")
-    // .ThrowAsJavaScriptException();
+     Napi::TypeError::New(env, "Unable to open rig")
+     .ThrowAsJavaScriptException();
+  }
+
+  return Napi::Number::New(env, retcode);
+}
+
+Napi::Value NodeHamLib::Destroy(const Napi::CallbackInfo & info) {
+  Napi::Env env = info.Env();
+
+  int retcode = rig_cleanup(my_rig);
+  if (retcode != RIG_OK) {
+
+    Napi::TypeError::New(env, rigerror(retcode))
+    .ThrowAsJavaScriptException();
   }
 
   return Napi::Number::New(env, retcode);
@@ -268,12 +278,20 @@ Napi::Function NodeHamLib::GetClass(Napi::Env env) {
       NodeHamLib::InstanceMethod("getMode", & NodeHamLib::GetMode),
       NodeHamLib::InstanceMethod("getStrength", & NodeHamLib::GetStrength),
       NodeHamLib::InstanceMethod("close", & NodeHamLib::Close),
+      NodeHamLib::InstanceMethod("destroy", & NodeHamLib::Destroy),
     });
+}
+
+Napi::Value Radios(const CallbackInfo& info) {
+  Env env = info.Env();
+  return String::New(env, "TODO: parse out rig-list to assist in setting up");
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   Napi::String name = Napi::String::New(env, "HamLib");
   exports.Set(name, NodeHamLib::GetClass(env));
+  Napi::String radios = Napi::String::New(env, "radios");
+  exports.Set(radios,  Napi::Function::New<Radios>(env));
   return exports;
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "node-libham",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "gypfile": true,
   "main": "./build/Release/hamlib",
   "license": "LGPL",
@@ -11,5 +11,10 @@
   },
   "dependencies": {
     "node-addon-api": "^4.3.0"
-  }
+  },
+  "keywords": [
+    "ham",
+    "radio",
+    "hamlib"
+  ]
 }

@@ -1,7 +1,10 @@
 const addon = require('../build/Release/hamlib');
 
 
-console.log('starting test');
+
+console.log(addon.radios())
+
+
 const test = new addon.HamLib(1035);
 console.log(test)
 const status = test.open();
@@ -16,6 +19,7 @@ console.log('get vfo', test.getVfo());
 console.log('get frequency', test.getFrequency());
 console.log('get mode', test.getMode());
 console.log('get strength', test.getStrength())
+test.destroy();
 
 /**
 test.setPtt(true);
