@@ -1,0 +1,10 @@
+{
+  "name": "node-libham",
+  "version": "0.0.1",
+  "gypfile": true,
+  "main": "./build/Release/hamlib",
+  "license": "MIT",
+  "dependencies": {
+    "node-addon-api": "^4.3.0"
+  }
+}
