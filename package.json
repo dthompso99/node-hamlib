@@ -1,6 +1,6 @@
 {
   "name": "node-libham",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "gypfile": true,
   "main": "./build/Release/hamlib",
   "license": "MIT",
