@@ -19,6 +19,7 @@ console.log('get vfo', test.getVfo());
 console.log('get frequency', test.getFrequency());
 console.log('get mode', test.getMode());
 console.log('get strength', test.getStrength())
+test.close();
 test.destroy();
 
 /**
