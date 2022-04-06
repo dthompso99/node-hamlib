@@ -328,20 +328,3 @@ Napi::Function NodeHamLib::GetClass(Napi::Env env) {
     });
 }
 
-Napi::Value Radios(const CallbackInfo & info) {
-  Env env = info.Env();
-  return String::New(env, "TODO: parse out rig-list to assist in setting up");
-}
-
-Napi::Object Init(Napi::Env env, Napi::Object exports) {
-
-  Napi::String name = Napi::String::New(env, "HamLib");
-  exports.Set(name, NodeHamLib::GetClass(env));
-
-  Napi::String radios = Napi::String::New(env, "radios");
-  exports.Set(radios, Napi::Function::New < Radios > (env));
-
-  return exports;
-}
-
-NODE_API_MODULE(addon, Init)

@@ -3,7 +3,9 @@
     {
       "target_name": "hamlib",
       "sources": [ 
-          "src/hamlib.cpp"
+          "src/hamlib.cpp",
+          "src/decoder.cpp",
+          "src/addon.cpp"
           ],
       "include_dirs": [
         "include", "/usr/local/include/", "node_modules/node-addon-api/"
