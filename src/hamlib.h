@@ -23,4 +23,5 @@ class NodeHamLib : public Napi::ObjectWrap<NodeHamLib> {
 
  private:
   RIG *my_rig;
+  bool rig_is_open = false;
 };

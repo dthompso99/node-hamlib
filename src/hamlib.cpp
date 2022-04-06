@@ -44,6 +44,7 @@ NodeHamLib::NodeHamLib(const Napi::CallbackInfo & info): ObjectWrap(info) {
     Napi::TypeError::New(env, "Unable to Init Rig").ThrowAsJavaScriptException();
   }
   strncpy(my_rig -> state.rigport.pathname, "/dev/ttyUSB0", FILPATHLEN - 1);
+  rig_is_open = false;
 }
 
 Napi::Value NodeHamLib::Open(const Napi::CallbackInfo & info) {
@@ -55,13 +56,19 @@ Napi::Value NodeHamLib::Open(const Napi::CallbackInfo & info) {
     // Napi::TypeError::New(env, "Unable to open rig")
     // .ThrowAsJavaScriptException();
   }
-
+  rig_is_open = true;
   return Napi::Number::New(env, retcode);
 }
 
 Napi::Value NodeHamLib::SetVFO(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
   int retcode;
+
+  if (!rig_is_open) {
+    Napi::TypeError::New(env, "Rig is not open!")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "Must Specify VFO-A or VFO-B")
       .ThrowAsJavaScriptException();
@@ -86,6 +93,11 @@ Napi::Value NodeHamLib::SetVFO(const Napi::CallbackInfo & info) {
 Napi::Value NodeHamLib::SetFrequency(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
   int retcode;
+  if (!rig_is_open) {
+    Napi::TypeError::New(env, "Rig is not open!")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "Must Specify VFO-A or VFO-B")
       .ThrowAsJavaScriptException();
@@ -106,7 +118,11 @@ Napi::Value NodeHamLib::SetMode(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
   int retcode;
   pbwidth_t bandwidth;
-
+  if (!rig_is_open) {
+    Napi::TypeError::New(env, "Rig is not open!")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "Must Specify Mode")
       .ThrowAsJavaScriptException();
@@ -154,7 +170,11 @@ Napi::Value NodeHamLib::SetPtt(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
   int retcode;
   bool ptt_state;
-
+  if (!rig_is_open) {
+    Napi::TypeError::New(env, "Rig is not open!")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "Specify true or false for ppt state")
       .ThrowAsJavaScriptException();
@@ -168,9 +188,9 @@ Napi::Value NodeHamLib::SetPtt(const Napi::CallbackInfo & info) {
   }
   ptt_state = info[0].As < Napi::Boolean > ();
   if (ptt_state) {
-      retcode = rig_set_ptt(my_rig, RIG_VFO_CURR, RIG_PTT_ON );
+    retcode = rig_set_ptt(my_rig, RIG_VFO_CURR, RIG_PTT_ON);
   } else {
-      retcode = rig_set_ptt(my_rig, RIG_VFO_CURR, RIG_PTT_OFF );
+    retcode = rig_set_ptt(my_rig, RIG_VFO_CURR, RIG_PTT_OFF);
   }
   if (retcode != RIG_OK) {
 
@@ -185,11 +205,16 @@ Napi::Value NodeHamLib::GetVFO(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
   int retcode;
   vfo_t vfo;
+  if (!rig_is_open) {
+    Napi::TypeError::New(env, "Rig is not open!")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
   retcode = rig_get_vfo(my_rig, & vfo);
   if (retcode == RIG_OK) {
     return Napi::Number::New(env, vfo);
   } else {
-      //dont throw an exception here, not every radio reports vfo
+    //dont throw an exception here, not every radio reports vfo
     Napi::Error::New(env, rigerror(retcode));
     return env.Null();
   }
@@ -199,9 +224,14 @@ Napi::Value NodeHamLib::GetVFO(const Napi::CallbackInfo & info) {
 Napi::Value NodeHamLib::GetFrequency(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
   int retcode;
-  freq_t freq; 
-  retcode = rig_get_freq(my_rig, RIG_VFO_CURR, &freq);
-if (retcode == RIG_OK) {
+  freq_t freq;
+  retcode = rig_get_freq(my_rig, RIG_VFO_CURR, & freq);
+  if (!rig_is_open) {
+    Napi::TypeError::New(env, "Rig is not open!")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  if (retcode == RIG_OK) {
     return Napi::Number::New(env, freq);
   } else {
     Napi::Error::New(env, rigerror(retcode));
@@ -214,8 +244,13 @@ Napi::Value NodeHamLib::GetMode(const Napi::CallbackInfo & info) {
   int retcode;
   rmode_t rmode;
   pbwidth_t width;
-  retcode = rig_get_mode(my_rig, RIG_VFO_CURR, &rmode, &width);
-if (retcode == RIG_OK) {
+  if (!rig_is_open) {
+    Napi::TypeError::New(env, "Rig is not open!")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  retcode = rig_get_mode(my_rig, RIG_VFO_CURR, & rmode, & width);
+  if (retcode == RIG_OK) {
     Napi::Object obj = Napi::Object::New(env);
     obj.Set(Napi::String::New(env, "mode"), rmode);
     obj.Set(Napi::String::New(env, "width"), width);
@@ -230,8 +265,13 @@ Napi::Value NodeHamLib::GetStrength(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
   int retcode;
   int strength;
-  retcode = rig_get_strength(my_rig, RIG_VFO_CURR, &strength);
-if (retcode == RIG_OK) {
+  if (!rig_is_open) {
+    Napi::TypeError::New(env, "Rig is not open!")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  retcode = rig_get_strength(my_rig, RIG_VFO_CURR, & strength);
+  if (retcode == RIG_OK) {
     return Napi::Number::New(env, strength);
   } else {
     Napi::Error::New(env, rigerror(retcode));
@@ -241,26 +281,32 @@ if (retcode == RIG_OK) {
 
 Napi::Value NodeHamLib::Close(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
-
+  if (!rig_is_open) {
+    Napi::TypeError::New(env, "Rig is not open!")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
   int retcode = rig_close(my_rig);
   if (retcode != RIG_OK) {
-     Napi::TypeError::New(env, "Unable to open rig")
-     .ThrowAsJavaScriptException();
+    Napi::TypeError::New(env, "Unable to open rig")
+      .ThrowAsJavaScriptException();
   }
-
+  rig_is_open = false;
   return Napi::Number::New(env, retcode);
 }
 
 Napi::Value NodeHamLib::Destroy(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
-
+  if (rig_is_open) {
+    rig_close(my_rig);
+  }
   int retcode = rig_cleanup(my_rig);
   if (retcode != RIG_OK) {
 
     Napi::TypeError::New(env, rigerror(retcode))
-    .ThrowAsJavaScriptException();
+      .ThrowAsJavaScriptException();
   }
-
+  rig_is_open = false;
   return Napi::Number::New(env, retcode);
 }
 
@@ -282,18 +328,20 @@ Napi::Function NodeHamLib::GetClass(Napi::Env env) {
     });
 }
 
-Napi::Value Radios(const CallbackInfo& info) {
+Napi::Value Radios(const CallbackInfo & info) {
   Env env = info.Env();
   return String::New(env, "TODO: parse out rig-list to assist in setting up");
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
+
   Napi::String name = Napi::String::New(env, "HamLib");
   exports.Set(name, NodeHamLib::GetClass(env));
+
   Napi::String radios = Napi::String::New(env, "radios");
-  exports.Set(radios,  Napi::Function::New<Radios>(env));
+  exports.Set(radios, Napi::Function::New < Radios > (env));
+
   return exports;
 }
-
 
 NODE_API_MODULE(addon, Init)
