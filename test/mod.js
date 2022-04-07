@@ -6,7 +6,7 @@ const radio = require('../build/Release/hamlib');
 
 
 const ctrl = new radio.HamLib(1035);
-console.log(ctrl)
+
 const status = ctrl.open();
 //set vfo appears not to work for the 991
 
@@ -24,7 +24,8 @@ ctrl.destroy();
 
 
 const decoder = new radio.Decoder();
-decoder.open();
+console.log(decoder.listDevices());
+decoder.close();
 /**
 test.setPtt(true);
 setTimeout(()=> {
