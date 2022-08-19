@@ -12,7 +12,7 @@
         ],
       "dependencies": [
         "<!(node -p \"require('node-addon-api').gyp\")"
-      ]
+      ],
       "libraries": [
         "-L/usr/local/lib", "-lhamlib", "-lportaudio", "-lasound", "-ljack"
     ],

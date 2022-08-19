@@ -1,12 +1,49 @@
 #include "decoder.h"
 #include "portaudio.h"
+#include <stdio.h>
+
+#define SAMPLE_RATE  (44100)
+#define FRAMES_PER_BUFFER (512)
+#if 1
+#define PA_SAMPLE_TYPE  paFloat32
+typedef float SAMPLE;
+#define SAMPLE_SILENCE  (0.0f)
+#define PRINTF_S_FORMAT "%.8f"
+#elif 1
+#define PA_SAMPLE_TYPE  paInt16
+typedef short SAMPLE;
+#define SAMPLE_SILENCE  (0)
+#define PRINTF_S_FORMAT "%d"
+#elif 0
+#define PA_SAMPLE_TYPE  paInt8
+typedef char SAMPLE;
+#define SAMPLE_SILENCE  (0)
+#define PRINTF_S_FORMAT "%d"
+#else
+#define PA_SAMPLE_TYPE  paUInt8
+typedef unsigned char SAMPLE;
+#define SAMPLE_SILENCE  (128)
+#define PRINTF_S_FORMAT "%d"
+#endif
+
+typedef struct
+{
+  unsigned frameIndex;
+  int threadSyncFlag;
+  SAMPLE *ringBufferData;
+  FILE *file;
+  void *threadHandle;
+} paTestData;
 
 using namespace Napi;
 
 Decoder::Decoder(const Napi::CallbackInfo & info): ObjectWrap(info) {
   //Napi::Env env = info.Env();
     PaError err;
-      err = Pa_Initialize();
+    //suppress output from pa_initialize
+    fclose(stderr);
+    err = Pa_Initialize();
+    freopen("CON", "w", stderr);
   if (err != paNoError) {
     printf("ERROR: Pa_Initialize returned 0x%x\n", err);
   }
@@ -28,18 +65,57 @@ Napi::Value Decoder::ListDevices(const Napi::CallbackInfo & info) {
   Napi::Array arrDevices = Napi::Array::New(env);
   for (int i = 0; i < numDevices; i++) {
     deviceInfo = Pa_GetDeviceInfo(i);
+    printf("Source: %s  -- inputs: %i outputs: %i\n", deviceInfo->name, deviceInfo->maxInputChannels, deviceInfo->maxOutputChannels);
     arrDevices.Set(i, Napi::String::New(env, deviceInfo -> name));
   }
   return arrDevices;
 }
 
-Napi::Value Decoder::SetInputDevice(const Napi::CallbackInfo & info) {
+ static int recordCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData ) {
+  printf("callback called!\n");
+  paTestData *data = (paTestData*)userData;
+  return paContinue;
+ }
 
-    return Napi::Number::New(env, 0);
+Napi::Value Decoder::SetInputDevice(const Napi::CallbackInfo & info) {
+    Napi::Env env = info.Env();
+    if (!info[0].IsNumber()) {
+        Napi::TypeError::New(env, "Frequency must be specified as an integer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+      //begin test
+      PaStreamParameters  inputParameters, outputParameters;
+      PaStream*           stream;
+      PaError             err = paNoError;
+      paTestData          data = {0};
+      inputParameters.device = info[0].As < Napi::Number > ().Int32Value();
+      inputParameters.channelCount = 1;                    /* stereo input */
+      inputParameters.sampleFormat = PA_SAMPLE_TYPE;
+      inputParameters.suggestedLatency = Pa_GetDeviceInfo( inputParameters.device )->defaultLowInputLatency;
+      inputParameters.hostApiSpecificStreamInfo = NULL;
+
+      err = Pa_OpenStream(
+          &stream,
+          &inputParameters,
+          NULL, /* &outputParameters, */
+          SAMPLE_RATE,
+          FRAMES_PER_BUFFER,
+          paClipOff, /* we won't output out of range samples so don't bother clipping them */
+          recordCallback,
+          &data);
+    if( err != paNoError ) {
+        Napi::TypeError::New(env, "Unable to open input!").ThrowAsJavaScriptException();
+        return env.Null();
+    } else {
+      err = Pa_StartStream( stream );
+      return Napi::Number::New(env, 0);
+    }
+      //end test
+    
 }
 
 Napi::Value Decoder::SetOutputDevice(const Napi::CallbackInfo & info) {
-
+    Napi::Env env = info.Env();
     return Napi::Number::New(env, 0);
 }
 

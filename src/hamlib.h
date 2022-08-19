@@ -2,7 +2,11 @@
 
 #include <napi.h>
 
+//forward declarations
 typedef struct s_rig RIG;
+typedef unsigned int 	vfo_t;
+typedef double freq_t;
+
 
 class NodeHamLib : public Napi::ObjectWrap<NodeHamLib> {
  public:
@@ -21,7 +25,13 @@ class NodeHamLib : public Napi::ObjectWrap<NodeHamLib> {
   Napi::Value Destroy(const Napi::CallbackInfo&);
   static Napi::Function GetClass(Napi::Env);
 
+  static int freq_change_cb(RIG*, vfo_t, freq_t, void*);
+
  private:
   RIG *my_rig;
   bool rig_is_open = false;
+  int count = 0;
+  void* freq_emit_cb;
+  static Napi::FunctionReference constructor;
+  Napi::CallbackInfo * m_currentInfo;
 };

@@ -4,9 +4,12 @@
 
 using namespace Napi;
 
+Napi::FunctionReference NodeHamLib::constructor;
+Napi::ThreadSafeFunction tsfn;
+
 NodeHamLib::NodeHamLib(const Napi::CallbackInfo & info): ObjectWrap(info) {
   Napi::Env env = info.Env();
-
+  this->m_currentInfo = (Napi::CallbackInfo *)&info;
   if (info.Length() < 1) {
     Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
     return;
@@ -38,24 +41,66 @@ NodeHamLib::NodeHamLib(const Napi::CallbackInfo & info): ObjectWrap(info) {
   rig_model_t myrig_model = info[0].As < Napi::Number > ().DoubleValue();
 
   my_rig = rig_init(myrig_model);
+  //int retcode = 0;
   if (!my_rig) {
     fprintf(stderr, "Unknown rig num: %d\n", myrig_model);
     fprintf(stderr, "Please check riglist.h\n");
     Napi::TypeError::New(env, "Unable to Init Rig").ThrowAsJavaScriptException();
   }
   strncpy(my_rig -> state.rigport.pathname, "/dev/ttyUSB0", FILPATHLEN - 1);
+
+  // this->freq_emit_cb = [info](freq_t freq) {
+  //     Napi::Env env = info.Env();
+  //     Napi::Function emit = info.This().As<Napi::Object>().Get("emit").As<Napi::Function>();
+  //       emit.Call(
+  //       info.This(),
+  //       {Napi::String::New(env, "frequency_change"), Napi::Number::New(env, freq)});
+  //   } 
+
   rig_is_open = false;
+}
+
+int NodeHamLib::freq_change_cb(RIG *rig, vfo_t vfo, freq_t freq, void* arg) {
+      auto instance = static_cast<NodeHamLib*>(arg);
+      printf("Rig changed freq to %0.7f Hz\n", freq);
+      Napi::Env env = instance->m_currentInfo->Env();
+      //Napi::Function emit = instance->m_currentInfo[0].Get("emit").As<Napi::Function>();
+			// Napi::Function emit = instance->m_currentInfo[0]->This().As<Napi::Object>().Get("emit").As<Napi::Function>();
+      //emit.Call(instance->m_currentInfo->This(), { Napi::String::New(env, "frequency_change"), Napi::Number::New(env, freq) });
+        //this->freq_emit_cb(freq);
+        //Napi::Function emit = this.As<Napi::Object>().Get("emit").As<Napi::Function>();
+        //auto fn = global.Get("process").As<Napi::Object>().Get("emit").As<Napi::Function>();
+        //fn.Call({Napi::Number::New(env, freq)});
+        return 0;
+  return 0;
 }
 
 Napi::Value NodeHamLib::Open(const Napi::CallbackInfo & info) {
   Napi::Env env = info.Env();
-
+  
   int retcode = rig_open(my_rig);
   if (retcode != RIG_OK) {
     printf("rig_open: error = %s\n", rigerror(retcode));
     // Napi::TypeError::New(env, "Unable to open rig")
     // .ThrowAsJavaScriptException();
   }
+
+
+
+  rig_set_freq_callback(my_rig, NodeHamLib::freq_change_cb, this);
+
+  auto ppt_cb =+[](RIG *rig, vfo_t vfo, ptt_t ptt, rig_ptr_t arg) {
+    printf("PPT pushed!");
+    return 0;
+  };
+  retcode = rig_set_ptt_callback (my_rig, ppt_cb, NULL);
+  rig_set_trn(my_rig, RIG_TRN_POLL);
+  if (retcode != RIG_OK ) {
+	  printf("rig_set_trn: error = %s \n", rigerror(retcode));
+	}
+
+  printf ("callback: %s", rigerror(retcode));
+
   rig_is_open = true;
   return Napi::Number::New(env, retcode);
 }
@@ -311,7 +356,7 @@ Napi::Value NodeHamLib::Destroy(const Napi::CallbackInfo & info) {
 }
 
 Napi::Function NodeHamLib::GetClass(Napi::Env env) {
-  return DefineClass(
+  auto ret =  DefineClass(
     env,
     "HamLib", {
       NodeHamLib::InstanceMethod("open", & NodeHamLib::Open),
@@ -323,8 +368,15 @@ Napi::Function NodeHamLib::GetClass(Napi::Env env) {
       NodeHamLib::InstanceMethod("getFrequency", & NodeHamLib::GetFrequency),
       NodeHamLib::InstanceMethod("getMode", & NodeHamLib::GetMode),
       NodeHamLib::InstanceMethod("getStrength", & NodeHamLib::GetStrength),
+      
+      
+      
+
       NodeHamLib::InstanceMethod("close", & NodeHamLib::Close),
       NodeHamLib::InstanceMethod("destroy", & NodeHamLib::Destroy),
     });
+      constructor = Napi::Persistent(ret);
+      constructor.SuppressDestruct();
+      return ret;
 }
 
