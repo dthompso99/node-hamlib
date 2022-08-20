@@ -26,6 +26,9 @@ console.log('get strength', ctrl.getStrength())
 const decoder = new radio.Decoder();
 console.log(decoder.listDevices());
 decoder.setInputDevice(0);
+decoder.setOutputDevice(0);
+console.log('opening audio input');
+decoder.open();
 //decoder.close();
 /**
 test.setPtt(true);
