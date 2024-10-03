@@ -7,7 +7,7 @@ node-hamlib is a simple wrapper around https://hamlib.github.io/ for control of 
 
 You'll need `libhamlib-dev` and all of its pre-requisites in order to link up and build correctly.  You'll also need node-gyp as this is compiled at install time
 
-new requirements: `portaudio19-dev`
+10/3/24 commented out the incomplete work around the decoder, and updated to work with newer hamlib.
 
 ## Simple Example
 
