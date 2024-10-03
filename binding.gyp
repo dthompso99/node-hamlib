@@ -14,7 +14,7 @@
         "<!(node -p \"require('node-addon-api').gyp\")"
       ],
       "libraries": [
-        "-L/usr/local/lib", "-lhamlib", "-lportaudio", "-lasound", "-ljack"
+        "-L/usr/local/lib", "-lhamlib"
     ],
     'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
     },

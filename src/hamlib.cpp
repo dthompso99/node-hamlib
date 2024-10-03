@@ -1,6 +1,6 @@
 #include "hamlib.h"
 
-#include <hamlib/rig.h>
+
 
 using namespace Napi;
 
@@ -32,7 +32,7 @@ NodeHamLib::NodeHamLib(const Napi::CallbackInfo & info): ObjectWrap(info) {
   // myport.parm.serial.stop_bits = 2;
   // myport.parm.serial.parity = RIG_PARITY_NONE;
   // myport.parm.serial.handshake = RIG_HANDSHAKE_HARDWARE;
-  // strncpy(myport.pathname, "/dev/ttyUSB0", FILPATHLEN - 1);
+  // strncpy(myport.pathname, "/dev/ttyUSB0", HAMLIB_FILPATHLEN - 1);
 
   // rig_load_all_backends();
   // myrig_model = rig_probe(&myport);
@@ -297,7 +297,7 @@ Napi::Value NodeHamLib::GetMode(const Napi::CallbackInfo & info) {
   retcode = rig_get_mode(my_rig, RIG_VFO_CURR, & rmode, & width);
   if (retcode == RIG_OK) {
     Napi::Object obj = Napi::Object::New(env);
-    obj.Set(Napi::String::New(env, "mode"), rmode);
+    obj.Set(Napi::String::New(env, "mode"), (char)rmode);
     obj.Set(Napi::String::New(env, "width"), width);
     return obj;
   } else {

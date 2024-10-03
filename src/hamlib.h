@@ -1,11 +1,11 @@
 #pragma once
 
 #include <napi.h>
-
+#include <hamlib/rig.h>
 //forward declarations
-typedef struct s_rig RIG;
-typedef unsigned int 	vfo_t;
-typedef double freq_t;
+//typedef struct s_rig RIG;
+//typedef unsigned int 	vfo_t;
+//typedef double freq_t;
 
 
 class NodeHamLib : public Napi::ObjectWrap<NodeHamLib> {

@@ -1,6 +1,6 @@
 {
   "name": "node-hamlib",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "gypfile": true,
   "main": "./build/Release/hamlib",
   "license": "LGPL",

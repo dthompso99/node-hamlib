@@ -8,8 +8,8 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set(name, NodeHamLib::GetClass(env));
 
 
-  Napi::String decoder_name = Napi::String::New(env, "Decoder");
-  exports.Set(decoder_name, Decoder::GetClass(env));
+  // Napi::String decoder_name = Napi::String::New(env, "Decoder");
+  // exports.Set(decoder_name, Decoder::GetClass(env));
 
   return exports;
 }
